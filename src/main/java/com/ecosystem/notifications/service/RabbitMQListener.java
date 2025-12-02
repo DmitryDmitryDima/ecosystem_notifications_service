@@ -1,12 +1,11 @@
 package com.ecosystem.notifications.service;
 
 
-import com.ecosystem.notifications.events.ProjectRemoval;
+
 import com.ecosystem.notifications.events.UserEvent;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.messaging.Message;
+
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
