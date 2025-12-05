@@ -22,6 +22,7 @@ public class RabbitMQListener {
     private SimpMessagingTemplate notifier;
 
     private static final String PROJECT_REMOVAL_EVENT = "java_project_removal";
+    private static final String PROJECT_CREATION_EVENT ="java_project_creation";
 
 
 
@@ -30,7 +31,7 @@ public class RabbitMQListener {
                                          @Header("event_type") String eventType) throws Exception {
 
 
-        if (eventType.equals(PROJECT_REMOVAL_EVENT)){
+        if (eventType.equals(PROJECT_REMOVAL_EVENT)||eventType.equals(PROJECT_CREATION_EVENT)){
             UserEvent event = objectMapper.readValue(payload, UserEvent.class);
             notifier.convertAndSend("/users/activity/"+event.getContext().getUserUUID(), payload);
 
