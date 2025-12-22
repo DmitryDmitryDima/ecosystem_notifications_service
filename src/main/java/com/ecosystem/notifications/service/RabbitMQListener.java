@@ -2,6 +2,7 @@ package com.ecosystem.notifications.service;
 
 
 
+import com.ecosystem.notifications.events.ProjectEvent;
 import com.ecosystem.notifications.events.UserEvent;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,12 @@ public class RabbitMQListener {
     public void receiveProjectsEvent(@Payload String payload, @Header("event_type") String eventType) throws Exception{
 
         System.out.println(payload);
+
+        // данное событие предназначено только для комнаты проекта, персональная рассылка не требуется
+        if (eventType.equals(PROJECT_FILE_SAVE_EVENT)){
+            ProjectEvent event = objectMapper.readValue(payload,  ProjectEvent.class);
+            notifier.convertAndSend("/projects/java/"+event.getContext().getProjectId(), payload);
+        }
     }
 
 
