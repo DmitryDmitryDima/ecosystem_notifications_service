@@ -14,4 +14,5 @@ public class UserEventContext {
     private  Instant timestamp;
     private  String username;
     private  UUID userUUID;
+    private UUID correlationId;
 }

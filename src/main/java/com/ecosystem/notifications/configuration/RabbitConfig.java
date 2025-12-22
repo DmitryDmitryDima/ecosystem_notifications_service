@@ -18,6 +18,16 @@ public class RabbitConfig {
     @Value("${users.activity_events.queue.name}")
     private String USERS_ACTIVITY_QUEUE;
 
+    @Value("${users.projects_events.exchange.name}")
+    private String USERS_PROJECTS_EVENTS_EXCHANGE;
+
+    @Value("${users.projects_events.queue.name}")
+    private String USERS_PROJECTS_EVENTS_QUEUE;
+
+
+
+
+    // users activity
 
     @Bean
     public Queue usersActivityQueue(){
@@ -38,6 +48,31 @@ public class RabbitConfig {
                 .to(activityExchange);
 
     }
+
+
+    // projects activity - room based
+
+    @Bean
+    public Queue projectsEventsQueue(){
+        return new Queue(USERS_PROJECTS_EVENTS_QUEUE);
+    }
+
+
+    @Bean
+    public FanoutExchange projectsEventsExchange(){
+        return new FanoutExchange(USERS_PROJECTS_EVENTS_EXCHANGE);
+    }
+
+    @Bean
+    public Binding projectsBinding(@Qualifier("projectsEventsQueue") Queue projectsQueue,
+                                   @Qualifier("projectsEventsExchange") FanoutExchange projectsExchange) {
+        return BindingBuilder
+                .bind(projectsQueue)
+                .to(projectsExchange);
+
+    }
+
+
 
 
 

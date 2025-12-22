@@ -26,11 +26,15 @@ public class RabbitMQListener {
 
 
 
+    private static final String PROJECT_FILE_SAVE_EVENT = "java_project_file_save";
+
+
     @RabbitListener(queues = {"${users.activity_events.queue.name}"})
-    public void receiveUserCreationEvent(@Payload String payload,
+    public void receiveUserActivityEvent(@Payload String payload,
                                          @Header("event_type") String eventType) throws Exception {
 
 
+        System.out.println(payload);
         if (eventType.equals(PROJECT_REMOVAL_EVENT)||eventType.equals(PROJECT_CREATION_EVENT)){
             UserEvent event = objectMapper.readValue(payload, UserEvent.class);
             notifier.convertAndSend("/users/activity/"+event.getContext().getUserUUID(), payload);
@@ -41,16 +45,15 @@ public class RabbitMQListener {
         }
 
 
-
-
-
-
-
-
-
-
-
     }
+
+    @RabbitListener(queues = {"${users.projects_events.queue.name}"})
+    public void receiveProjectsEvent(@Payload String payload, @Header("event_type") String eventType) throws Exception{
+
+        System.out.println(payload);
+    }
+
+
 
 
 
