@@ -23,7 +23,7 @@ public class RabbitMQListener {
     private SimpMessagingTemplate notifier;
 
     private static final String PROJECT_REMOVAL_EVENT = "java_project_removal";
-    private static final String PROJECT_CREATION_EVENT ="java_project_creation";
+    private static final String PROJECT_CREATION_EVENT ="java_project_creation_from_template";
 
 
 
