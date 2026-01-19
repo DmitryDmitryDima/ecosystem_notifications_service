@@ -24,6 +24,12 @@ public class RabbitConfig {
     @Value("${users.projects_events.queue.name}")
     private String USERS_PROJECTS_EVENTS_QUEUE;
 
+    @Value("${system.projects_events.exchange.name}")
+    private String SYSTEM_PROJECTS_EVENTS_EXCHANGE;
+
+    @Value("${system.projects_events.queue.name}")
+    private String SYSTEM_PROJECTS_EVENTS_QUEUE;
+
 
 
 
@@ -50,25 +56,43 @@ public class RabbitConfig {
     }
 
 
-    // projects activity - room based
+    // users projects activity - room based
 
     @Bean
-    public Queue projectsEventsQueue(){
+    public Queue usersProjectsEventsQueue(){
         return new Queue(USERS_PROJECTS_EVENTS_QUEUE);
     }
 
 
     @Bean
-    public FanoutExchange projectsEventsExchange(){
+    public FanoutExchange usersProjectsEventsExchange(){
         return new FanoutExchange(USERS_PROJECTS_EVENTS_EXCHANGE);
     }
 
     @Bean
-    public Binding projectsBinding(@Qualifier("projectsEventsQueue") Queue projectsQueue,
-                                   @Qualifier("projectsEventsExchange") FanoutExchange projectsExchange) {
+    public Binding usersProjectsBinding(@Qualifier("usersProjectsEventsQueue") Queue projectsQueue,
+                                        @Qualifier("usersProjectsEventsExchange") FanoutExchange projectsExchange) {
         return BindingBuilder
                 .bind(projectsQueue)
                 .to(projectsExchange);
+
+    }
+
+    // system projects events
+    @Bean
+    public Queue systemProjectsEventsQueue() {return new Queue(SYSTEM_PROJECTS_EVENTS_QUEUE);}
+
+    @Bean
+    public FanoutExchange systemProjectsEventsExchange(){
+        return new FanoutExchange(SYSTEM_PROJECTS_EVENTS_EXCHANGE);
+    }
+
+    @Bean
+    public Binding systemProjectsEventsBinding(@Qualifier("systemProjectsEventsQueue") Queue systemProjectsQueue,
+                                        @Qualifier("systemProjectsEventsExchange") FanoutExchange exchange) {
+        return BindingBuilder
+                .bind(systemProjectsQueue)
+                .to(exchange);
 
     }
 

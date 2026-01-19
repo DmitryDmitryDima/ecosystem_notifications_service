@@ -3,6 +3,7 @@ package com.ecosystem.notifications.service;
 
 
 import com.ecosystem.notifications.events.ProjectEvent;
+import com.ecosystem.notifications.events.ProjectSystemEvent;
 import com.ecosystem.notifications.events.UserEvent;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +25,8 @@ public class RabbitMQListener {
 
     private static final String PROJECT_REMOVAL_EVENT = "java_project_removal";
     private static final String PROJECT_CREATION_EVENT ="java_project_creation_from_template";
-
-
-
     private static final String PROJECT_FILE_SAVE_EVENT = "java_project_file_save";
+    private static final String JAVA_PROJECT_FILE_SAVE_SYSTEM = "java_project_file_save_system";
 
 
     @RabbitListener(queues = {"${users.activity_events.queue.name}"})
@@ -48,6 +47,8 @@ public class RabbitMQListener {
 
     }
 
+
+
     @RabbitListener(queues = {"${users.projects_events.queue.name}"})
     public void receiveProjectsEvent(@Payload String payload, @Header("event_type") String eventType) throws Exception{
 
@@ -59,6 +60,24 @@ public class RabbitMQListener {
             notifier.convertAndSend("/projects/java/"+event.getContext().getProjectId(), payload);
         }
     }
+
+
+    @RabbitListener(queues = {"${system.projects_events.queue.name}"})
+    public void receiveSystemProjectsEvent(@Payload String payload, @Header("event_type") String eventType) throws Exception{
+        System.out.println(payload);
+
+        if (eventType.equals(JAVA_PROJECT_FILE_SAVE_SYSTEM)){
+            System.out.println("system event catched!!");
+            ProjectSystemEvent event = objectMapper.readValue(payload,  ProjectSystemEvent.class);
+            notifier.convertAndSend("/projects/java/"+event.getContext().getProjectId(), payload);
+
+
+
+        }
+    }
+
+
+
 
 
 
