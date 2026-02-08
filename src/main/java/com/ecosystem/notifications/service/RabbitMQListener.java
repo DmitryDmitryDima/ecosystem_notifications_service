@@ -27,6 +27,7 @@ public class RabbitMQListener {
     private static final String PROJECT_CREATION_EVENT ="java_project_creation_from_template";
     private static final String PROJECT_FILE_SAVE_EVENT = "java_project_file_save";
     private static final String JAVA_PROJECT_FILE_SAVE_SYSTEM = "java_project_file_save_system";
+    private static final String JAVA_PROJECT_FILE_REMOVAL = "java_project_file_removal";
 
 
 
@@ -57,7 +58,7 @@ public class RabbitMQListener {
         System.out.println(payload);
 
         // данное событие предназначено только для комнаты проекта, персональная рассылка не требуется
-        if (eventType.equals(PROJECT_FILE_SAVE_EVENT)){
+        if (eventType.equals(PROJECT_FILE_SAVE_EVENT) || eventType.equals(JAVA_PROJECT_FILE_REMOVAL)){
             ProjectEvent event = objectMapper.readValue(payload,  ProjectEvent.class);
             notifier.convertAndSend("/projects/java/"+event.getContext().getProjectId(), payload);
         }
