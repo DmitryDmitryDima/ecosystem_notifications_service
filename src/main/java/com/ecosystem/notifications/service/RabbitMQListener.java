@@ -2,9 +2,7 @@ package com.ecosystem.notifications.service;
 
 
 
-import com.ecosystem.notifications.events.ProjectEvent;
-import com.ecosystem.notifications.events.ProjectSystemEvent;
-import com.ecosystem.notifications.events.UserEvent;
+import com.ecosystem.notifications.events.*;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -23,11 +21,7 @@ public class RabbitMQListener {
     @Autowired
     private SimpMessagingTemplate notifier;
 
-    private static final String PROJECT_REMOVAL_EVENT = "java_project_removal";
-    private static final String PROJECT_CREATION_EVENT ="java_project_creation_from_template";
-    private static final String PROJECT_FILE_SAVE_EVENT = "java_project_file_save";
-    private static final String JAVA_PROJECT_FILE_SAVE_SYSTEM = "java_project_file_save_system";
-    private static final String JAVA_PROJECT_FILE_REMOVAL = "java_project_file_removal";
+
 
 
 
@@ -38,14 +32,14 @@ public class RabbitMQListener {
 
 
         System.out.println(payload);
-        if (eventType.equals(PROJECT_REMOVAL_EVENT)||eventType.equals(PROJECT_CREATION_EVENT)){
-            UserEvent event = objectMapper.readValue(payload, UserEvent.class);
-            notifier.convertAndSend("/users/activity/private/"+event.getContext().getUserUUID(), payload);
+        UserEvent event = objectMapper.readValue(payload, UserEvent.class);
+        notifier.convertAndSend("/users/activity/private/"+event.getContext().getUserUUID(), payload);
 
-
-
-
+        // дублируем в публичный канал
+        if (event.getContext().isPublic()){
+            notifier.convertAndSend("/users/activity/public/"+event.getContext().getUserUUID(), payload);
         }
+
 
 
     }
@@ -57,27 +51,32 @@ public class RabbitMQListener {
 
         System.out.println(payload);
 
-        // данное событие предназначено только для комнаты проекта, персональная рассылка не требуется
-        if (eventType.equals(PROJECT_FILE_SAVE_EVENT) || eventType.equals(JAVA_PROJECT_FILE_REMOVAL)){
-            ProjectEvent event = objectMapper.readValue(payload,  ProjectEvent.class);
-            notifier.convertAndSend("/projects/java/"+event.getContext().getProjectId(), payload);
-        }
+        ProjectEvent event = objectMapper.readValue(payload,  ProjectEvent.class);
+        ProjectEventContext context = event.getContext();
+        // при необходимости персональной рассылки - только приватный канал.
+        notifier.convertAndSend("/projects/"+context.getProjectId(), payload);
+
+        context.getParticipants().forEach(participant->{
+            notifier.convertAndSend("/users/activity/private/"+participant, payload);
+        });
+
+
+
     }
 
 
     @RabbitListener(queues = {"${system.projects_events.queue.name}"})
     public void receiveSystemProjectsEvent(@Payload String payload, @Header("event_type") String eventType) throws Exception{
         System.out.println(payload);
+        ProjectSystemEvent event = objectMapper.readValue(payload,  ProjectSystemEvent.class);
+        ProjectSystemEventContext context = event.getContext();
+        // при необходимости персональной рассылки - только приватный канал.
+        notifier.convertAndSend("/projects/"+context.getProjectId(), payload);
 
-        if (eventType.equals(JAVA_PROJECT_FILE_SAVE_SYSTEM)
-        ){
-            System.out.println("system event catched!!");
-            ProjectSystemEvent event = objectMapper.readValue(payload,  ProjectSystemEvent.class);
-            notifier.convertAndSend("/projects/java/"+event.getContext().getProjectId(), payload);
+        context.getParticipants().forEach(participant->{
+            notifier.convertAndSend("/users/activity/private/"+participant, payload);
+        });
 
-
-
-        }
     }
 
 

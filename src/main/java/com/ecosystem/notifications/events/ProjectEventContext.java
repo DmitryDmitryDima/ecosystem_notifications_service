@@ -24,11 +24,15 @@ public class ProjectEventContext {
     // todo participant role - роль участника - к примеру author, project admin (not always author only)
 
     // информация по проекту
-    private long projectId;
+    private UUID projectId;
 
     // все остальные, кроме автора. Автор при этом тоже получает событие
     // при этом важно отметить, что данное поле не всегда используется
-    // - к примеру ивент сохранения файла достаточно отправить только через project_id. т.е. по адресу комнаты
+    // Если поле заполнено отправителем - это означает, что персональная пересылка необходима (в приватный канал)
     private List<UUID> participants;
+
+
+
+
 
 }

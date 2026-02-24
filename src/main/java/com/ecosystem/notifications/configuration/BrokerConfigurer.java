@@ -12,11 +12,12 @@ public class BrokerConfigurer implements WebSocketMessageBrokerConfigurer {
 
     /*
     ввожу различие между публичным и приватным каналом подписки для юзер канала
+    ввожу унификацию для каналов всех проектов в системе, БЕЗ УКАЗАНИЯ ЯЗЫКА
      */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/users/activity/private","/users/activity/public",
-                "/projects/java"); // сюда клиент подписывается для получения персональных сообщений
+                "/projects"); // сюда клиент подписывается для получения персональных сообщений
         // сюда клиент подписывается для сообщений, ассоциированных с проектом
         registry.setApplicationDestinationPrefixes("/realtime"); // на адрес с этим префиксом клиент отправляет ивенты
         // (пока что в архитектуре отсутствуют действия, инициируемые websocket сообщением)

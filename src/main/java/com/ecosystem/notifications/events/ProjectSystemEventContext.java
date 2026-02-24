@@ -16,7 +16,7 @@ public class ProjectSystemEventContext {
 
     private Instant timestamp;
 
-    private Long projectId;
+    private UUID projectId;
 
     // название системного процесса (опционально)
     private String origin;
@@ -24,6 +24,7 @@ public class ProjectSystemEventContext {
     // correlation id процесса - каждый процесс в системе должен иметь свой correlation id
     private UUID correlationId;
 
-    // участники проекта - опционально для случаев, где требуется персональная рассылка участникам проекта
+    // участники проекта - опционально для случаев, где требуется персональная рассылка участникам проекта в приватный канал
+    // если список не пуст - значит рассылка нужна
     private List<UUID> participants;
 }
