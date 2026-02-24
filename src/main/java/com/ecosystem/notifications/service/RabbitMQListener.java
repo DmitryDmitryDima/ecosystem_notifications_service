@@ -13,7 +13,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
-
+//
 @Service
 public class RabbitMQListener {
 
@@ -40,7 +40,7 @@ public class RabbitMQListener {
         System.out.println(payload);
         if (eventType.equals(PROJECT_REMOVAL_EVENT)||eventType.equals(PROJECT_CREATION_EVENT)){
             UserEvent event = objectMapper.readValue(payload, UserEvent.class);
-            notifier.convertAndSend("/users/activity/"+event.getContext().getUserUUID(), payload);
+            notifier.convertAndSend("/users/activity/private/"+event.getContext().getUserUUID(), payload);
 
 
 

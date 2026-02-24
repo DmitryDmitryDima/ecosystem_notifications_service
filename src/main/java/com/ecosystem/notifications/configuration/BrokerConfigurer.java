@@ -10,9 +10,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class BrokerConfigurer implements WebSocketMessageBrokerConfigurer {
 
+    /*
+    ввожу различие между публичным и приватным каналом подписки для юзер канала
+     */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/users/activity",
+        registry.enableSimpleBroker("/users/activity/private","/users/activity/public",
                 "/projects/java"); // сюда клиент подписывается для получения персональных сообщений
         // сюда клиент подписывается для сообщений, ассоциированных с проектом
         registry.setApplicationDestinationPrefixes("/realtime"); // на адрес с этим префиксом клиент отправляет ивенты
