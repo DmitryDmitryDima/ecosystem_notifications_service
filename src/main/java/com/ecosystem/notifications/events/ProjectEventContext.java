@@ -31,6 +31,13 @@ public class ProjectEventContext {
     // Если поле заполнено отправителем - это означает, что персональная пересылка необходима (в приватный канал)
     private List<UUID> participants;
 
+    // добавляем это поле для более умного routing'а
+    private UUID projectAuthor;
+
+    // если opened, то ивент пересылается в том числе подписчикам user public канала (пример - добавление/удаление участника в открытый проект)
+    // для этого имеем поле автор
+    private boolean opened;
+
 
 
 
