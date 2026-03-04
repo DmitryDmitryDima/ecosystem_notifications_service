@@ -16,12 +16,19 @@ public class CustomHandShakeInterceptor implements HandshakeInterceptor {
                                    ServerHttpResponse response,
                                    WebSocketHandler wsHandler,
                                    Map<String, Object> attributes) throws Exception {
-        System.out.println("headers");
-        System.out.println(request.getHeaders());
-        System.out.println(request.getHeaders().toSingleValueMap());
+        //System.out.println("headers");
+        //System.out.println(request.getHeaders());
+        //System.out.println(request.getHeaders().toSingleValueMap());
 
         try {
+            // теперь вся сессия будет иметь доступ к контексту. включая сопряженные с ней ивенты
             SecurityContext context = SecurityContext.generateContext(request.getHeaders().toSingleValueMap());
+            attributes.put("securityContext", context);
+
+
+
+
+
             System.out.println(context);
         }
         catch (Exception e){

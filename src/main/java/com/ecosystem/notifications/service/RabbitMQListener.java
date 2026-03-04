@@ -2,7 +2,7 @@ package com.ecosystem.notifications.service;
 
 
 
-import com.ecosystem.notifications.events.*;
+import com.ecosystem.notifications.queue_events.*;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;

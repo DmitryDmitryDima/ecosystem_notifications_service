@@ -1,4 +1,4 @@
-package com.ecosystem.notifications.events;
+package com.ecosystem.notifications.queue_events;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
