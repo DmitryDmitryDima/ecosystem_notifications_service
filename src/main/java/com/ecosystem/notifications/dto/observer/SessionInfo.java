@@ -1,6 +1,5 @@
-package com.ecosystem.notifications.dto;
+package com.ecosystem.notifications.dto.observer;
 
-import com.ecosystem.notifications.configuration.SecurityContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

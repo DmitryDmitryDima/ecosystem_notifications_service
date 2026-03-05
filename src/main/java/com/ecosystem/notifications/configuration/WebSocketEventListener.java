@@ -1,6 +1,7 @@
 package com.ecosystem.notifications.configuration;
 
-import com.ecosystem.notifications.dto.SessionInfo;
+import com.ecosystem.notifications.dto.observer.SecurityContext;
+import com.ecosystem.notifications.dto.observer.SessionInfo;
 import com.ecosystem.notifications.service.ObservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -38,11 +39,14 @@ public class WebSocketEventListener {
 
         String path = SimpMessageHeaderAccessor.getDestination(headers);
 
+        System.out.println(path);
 
-        if (path!=null && path.startsWith("/project/")){
-            UUID projectId = UUID.fromString(path.split("/project/")[1]);
+
+        if (path!=null && path.startsWith("/projects/")){
+            UUID projectId = UUID.fromString(path.split("/projects/")[1]);
             SessionInfo sessionInfo = new SessionInfo(sessionId, securityContext);
             // добавляем зависимость
+
             observationService.addProjectSessionInfo(projectId, sessionInfo);
         }
 

@@ -1,4 +1,4 @@
-package com.ecosystem.notifications.configuration;
+package com.ecosystem.notifications.dto.observer;
 
 import lombok.*;
 

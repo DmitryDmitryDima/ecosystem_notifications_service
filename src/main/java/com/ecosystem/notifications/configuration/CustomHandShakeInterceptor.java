@@ -1,5 +1,6 @@
 package com.ecosystem.notifications.configuration;
 
+import com.ecosystem.notifications.dto.observer.SecurityContext;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;

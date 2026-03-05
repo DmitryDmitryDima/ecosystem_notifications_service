@@ -1,4 +1,4 @@
-package com.ecosystem.notifications.dto;
+package com.ecosystem.notifications.dto.observer;
 
 
 import lombok.AllArgsConstructor;
@@ -10,6 +10,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class SessionEnvelopeProjectPayload implements SessionEnvelopePayload{
+public class SessionEnvelopeProjectPayload implements SessionEnvelopePayload {
     private UUID projectId;
 }

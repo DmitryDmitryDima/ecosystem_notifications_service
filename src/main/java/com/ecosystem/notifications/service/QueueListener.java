@@ -2,7 +2,7 @@ package com.ecosystem.notifications.service;
 
 
 
-import com.ecosystem.notifications.queue_events.*;
+import com.ecosystem.notifications.queue_events.external_events.*;
 import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 //
 @Service
-public class RabbitMQListener {
+public class QueueListener {
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -54,6 +54,7 @@ public class RabbitMQListener {
 
     // todo тут потенциально возможны проблемы с дублированием ивента - когда ивент приходит одновременно в приват и в паблик.
     // один вариант решения - контроль corr id на ui - ивенты, имеющие один и тот же corr id, не могут быть оьбработаны больше одного раза.
+    // todo добавить type  в то, что расшифровывается из payload - извлчение из header оставлю для демонстрации
     @RabbitListener(queues = {"${users.projects_events.queue.name}"})
     public void receiveProjectsEvent(@Payload String payload, @Header("event_type") String eventType) throws Exception{
 
@@ -61,6 +62,7 @@ public class RabbitMQListener {
             System.out.println(payload);
 
             ProjectEvent event = objectMapper.readValue(payload,  ProjectEvent.class);
+            System.out.println(event.getType());
             ProjectEventContext context = event.getContext();
             // рассылка для канала
             notifier.convertAndSend("/projects/"+context.getProjectId(), payload);

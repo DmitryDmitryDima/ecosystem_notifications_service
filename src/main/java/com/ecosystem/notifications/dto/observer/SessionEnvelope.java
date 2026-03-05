@@ -1,9 +1,11 @@
-package com.ecosystem.notifications.dto;
+package com.ecosystem.notifications.dto.observer;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.web.socket.WebSocketSession;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Data
@@ -11,7 +13,7 @@ import org.springframework.web.socket.WebSocketSession;
 public class SessionEnvelope {
     private WebSocketSession session;
 
-    private SessionEnvelopePayload payload;
+    private List<SessionEnvelopePayload> payload = new ArrayList<>();
 
     public SessionEnvelope(WebSocketSession session){
         this.session = session;
