@@ -26,6 +26,8 @@ public class CustomHandShakeInterceptor implements HandshakeInterceptor {
             SecurityContext context = SecurityContext.generateContext(request.getHeaders().toSingleValueMap());
             attributes.put("securityContext", context);
 
+            System.out.println("handshake");
+
 
 
 

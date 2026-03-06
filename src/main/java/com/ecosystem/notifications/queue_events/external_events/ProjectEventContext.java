@@ -12,14 +12,16 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProjectEventContext {
+public class ProjectEventContext extends EventContext {
 
     // автор ивента
-    private Instant timestamp;
+    //private Instant timestamp;
     private  String username;
     private UUID userUUID;
-    private UUID correlationId;
+    //private UUID correlationId;
     private UUID renderId;
+
+    //private AlarmStrategy alarmStrategy;
 
     // todo participant role - роль участника - к примеру author, project admin (not always author only)
 

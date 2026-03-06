@@ -12,9 +12,9 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProjectSystemEventContext {
+public class ProjectSystemEventContext extends EventContext {
 
-    private Instant timestamp;
+    //private Instant timestamp;
 
     private UUID projectId;
 
@@ -22,7 +22,7 @@ public class ProjectSystemEventContext {
     private String origin;
 
     // correlation id процесса - каждый процесс в системе должен иметь свой correlation id
-    private UUID correlationId;
+    //private UUID correlationId;
 
     // участники проекта - опционально для случаев, где требуется персональная рассылка участникам проекта в приватный канал
     // если список не пуст - значит рассылка нужна

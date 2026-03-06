@@ -10,6 +10,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class SessionEnvelopeProjectPayload implements SessionEnvelopePayload {
+public class SessionProjectPayload implements SessionPayload {
     private UUID projectId;
+
 }

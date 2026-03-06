@@ -1,5 +1,6 @@
 package com.ecosystem.notifications.configuration;
 
+import com.ecosystem.notifications.dto.observer.SecurityContext;
 import com.ecosystem.notifications.service.ObservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -62,8 +63,11 @@ public class BrokerConfigurer implements WebSocketMessageBrokerConfigurer {
                     @Override
                     public void afterConnectionEstablished(final WebSocketSession session) throws Exception {
 
-                       observationService.registerSession(session);
-                       System.out.println("connection established");
+
+
+
+                        SecurityContext securityContext = (SecurityContext) session.getAttributes().get("securityContext");
+                        observationService.registerSecuredSession(session, securityContext);
 
 
 
@@ -72,7 +76,8 @@ public class BrokerConfigurer implements WebSocketMessageBrokerConfigurer {
                     @Override
                     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
 
-                        observationService.unregisterSession(session.getId());
+
+                        observationService.unregisterSecuredSession(session.getId());
                         System.out.println("connection closed");
                         super.afterConnectionClosed(session, closeStatus);
                     }

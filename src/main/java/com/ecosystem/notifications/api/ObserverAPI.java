@@ -25,7 +25,7 @@ public class ObserverAPI {
     @GetMapping("/getProjectSubscriptions/{uuid}")
     public ResponseEntity<Set<UsernameUUIDPair>> getProjectSubscriptions(@PathVariable("uuid") UUID projectId){
 
-        return ResponseEntity.ok(observationService.getProjectSubscriptions(projectId));
+        return ResponseEntity.ok(observationService.getAllProjectSubscriptions(projectId));
     }
 
 

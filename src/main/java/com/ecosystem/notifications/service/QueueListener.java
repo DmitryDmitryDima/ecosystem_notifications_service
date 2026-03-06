@@ -75,21 +75,7 @@ public class QueueListener {
             // автор отделен от participant, но его контент также могут смотреть сторонние наблюдатели, если он открыт
             notifier.convertAndSend("/users/activity/"+(context.isOpened()?"public/":"private/")+context.getProjectAuthor(), payload);
 
-            /*
-            context.getParticipants().forEach(participant->{
-                notifier.convertAndSend("/users/activity/private/"+participant, payload);
-            });
-            // в данном случае событие публикуется в том числе для подписчиков публичного канала автора проекта
-            if (context.isOpened()){
-                notifier.convertAndSend("/users/activity/public/"+context.getProjectAuthor(), payload);
-                // по идее это также часть публичного канала автора ивента, так как сопряженные с ним сущности отображаются для внешнего наблюдателя
-                if (!context.getProjectAuthor().equals(context.getUserUUID())){
-                    notifier.convertAndSend("/users/activity/public/"+context.getUserUUID(), payload);
-                }
-
-            }
-
-             */
+            System.out.println("alarm! "+event.getContext().getAlarmStrategy());
         }
         catch (Exception e){
             e.printStackTrace();

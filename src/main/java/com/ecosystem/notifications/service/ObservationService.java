@@ -1,10 +1,7 @@
 package com.ecosystem.notifications.service;
 
 
-import com.ecosystem.notifications.dto.observer.SessionEnvelope;
-import com.ecosystem.notifications.dto.observer.SessionEnvelopePayload;
-import com.ecosystem.notifications.dto.observer.SessionEnvelopeProjectPayload;
-import com.ecosystem.notifications.dto.observer.SessionInfo;
+import com.ecosystem.notifications.dto.observer.*;
 import com.ecosystem.notifications.dto.api.UsernameUUIDPair;
 import com.ecosystem.notifications.queue_events.external_events.ProjectEventContext;
 import com.ecosystem.notifications.queue_events.observer_events.ObserverEventType;
@@ -17,156 +14,178 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class ObservationService {
 
 
     @Autowired
-    public ApplicationEventPublisher publisher;
+    private ApplicationEventPublisher publisher;
 
+    private final ConcurrentHashMap<String, SessionSecuredEnvelope> sessionStore = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, List<Subscription>> userToSubAssosiation = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, List<Subscription>> projectToSubAssosiation = new ConcurrentHashMap<>();
 
-
-    private final ConcurrentHashMap<UUID, ConcurrentMap<String, SessionInfo>> projectSessions  =new ConcurrentHashMap<>();
-
-    private final ConcurrentHashMap<String, SessionEnvelope> allSessions = new ConcurrentHashMap<>();
-
-    public void registerSession(WebSocketSession session){
-        allSessions.put(session.getId(), new SessionEnvelope(session));
+    // связываем сессию и security context
+    public void registerSecuredSession(WebSocketSession session, SecurityContext context){
+        SessionSecuredEnvelope sessionSecuredEnvelope = new SessionSecuredEnvelope(context, session);
+        sessionStore.put(session.getId(), sessionSecuredEnvelope);
     }
 
-    // очищаем также все связанные с сессией зависимости. если они есть
-    public void unregisterSession(String sessionId){
-        SessionEnvelope envelope = allSessions.remove(sessionId);
+    private void injectSub(Subscription subsription, String sessionId){
+        if (subsription==null) return;
+        // гарантируем, что сессия находится в главном хранилище
+        AtomicReference<SessionSecuredEnvelope> touchedEnvelope = new AtomicReference<>();
 
-        if (envelope==null) return;
+        sessionStore.computeIfPresent(sessionId, (id, envelope)->{
 
-        for (SessionEnvelopePayload payload:envelope.getPayload()){
-            if (payload instanceof SessionEnvelopeProjectPayload projectPayload){
-                removeProjectSessionInfo(projectPayload.getProjectId(), sessionId);
-            }
-        }
+            touchedEnvelope.set(envelope);
 
-    }
+            subsription.setUsername(envelope.getContext().getUsername());
+            subsription.setUserUUID(envelope.getContext().getUuid());
 
-
-    public void addProjectSessionInfo(UUID projectId, SessionInfo sessionInfo){
-        System.out.println("добавляем подписку на комнату проекта");
-        /*
-        allSessions.computeIfPresent(sessionInfo.getSessionId(), (id, envelope)->{
-            System.out.println("добавляем подписку на комнату проекта");
-            envelope.getPayload().add(new SessionEnvelopeProjectPayload(projectId));
-            projectSessions.compute(projectId, (uuid, map)->{
-                if (map==null){
-                    map = new ConcurrentHashMap<>();
+            UUID userUUID = envelope.getContext().getUuid();
 
 
+            userToSubAssosiation.compute(userUUID, (uuid,subs)->{
+                if (subs==null){
+                    subs = new ArrayList<>();
                 }
-
-                // одна сессия может подписана только один раз на один и тот же проект
-                map.put(sessionInfo.getSessionId(), sessionInfo);
-                return map;
+                subs.add(subsription);
+                return subs;
             });
+
+
+
             return envelope;
         });
 
-         */
+        // операция не была совершена!
+        if (touchedEnvelope.get()==null) return;
 
-        allSessions.computeIfPresent(sessionInfo.getSessionId(), (id, envelope)->{
-            System.out.println("добавляем подписку на комнату проекта");
-            envelope.getPayload().add(new SessionEnvelopeProjectPayload(projectId));
-            return envelope;
-        });
+        if (subsription.getSessionPayload() instanceof SessionProjectPayload sessionProjectPayload){
+            projectToSubAssosiation.compute(sessionProjectPayload.getProjectId(), (projectId, subs)->{
+                if (subs == null){
+                    subs = new ArrayList<>();
+                }
+                subs.add(subsription);
+                return subs;
+            });
 
-        projectSessions.compute(projectId, (uuid, map)->{
-            if (map==null){
-                map = new ConcurrentHashMap<>();
-
-
-            }
-
-            // одна сессия может подписана только один раз на один и тот же проект
-            map.put(sessionInfo.getSessionId(), sessionInfo);
-            return map;
-        });
-
-        // публикуем ивент
-        ProjectObserverEvent projectObserverEvent = new ProjectObserverEvent();
-        projectObserverEvent.setType(ObserverEventType.PROJECT_SUB.getValue());
-        ProjectEventContext context = new ProjectEventContext();
-        context.setUsername(sessionInfo.getSecurityContext().getUsername());
-        context.setUserUUID(sessionInfo.getSecurityContext().getUuid());
-        context.setProjectId(projectId);
-        projectObserverEvent.setContext(context);
-        publisher.publishEvent(projectObserverEvent);
-
-    }
-
-    // удаляем информацию об очереди в проекте
-    public void removeProjectSessionInfo(UUID projectId, String sessionId){
-
-        projectSessions.computeIfPresent(projectId, (uuid, map)->{
-
-            SessionInfo removed =map.remove(sessionId);
-            // если value null, это автоматически означает удаление ключа uuid из потокобезопасной очереди
-            if (map.isEmpty()){
-                return null;
-            }
             ProjectObserverEvent projectObserverEvent = new ProjectObserverEvent();
-            projectObserverEvent.setType(ObserverEventType.PROJECT_UNSUB.getValue());
+            projectObserverEvent.setType(ObserverEventType.PROJECT_SUB.getValue());
             ProjectEventContext context = new ProjectEventContext();
-            context.setUsername(removed.getSecurityContext().getUsername());
-            context.setUserUUID(removed.getSecurityContext().getUuid());
-            context.setProjectId(projectId);
+            context.setUsername(subsription.getUsername());
+            context.setUserUUID(subsription.getUserUUID());
+            context.setProjectId(sessionProjectPayload.getProjectId());
             projectObserverEvent.setContext(context);
             publisher.publishEvent(projectObserverEvent);
+        }
+    }
 
-            return map;
+    public void addSubscription(String sessionId, String path){
+        if (path == null) return;
+        Subscription subscription = null;
+        if (path.startsWith("/projects/")){
+            UUID projectId = UUID.fromString(path.split("/projects/")[1]);
+            SessionProjectPayload projectPayload = new SessionProjectPayload(projectId);
+            subscription = new Subscription(sessionId, projectPayload);
+
+
+        }
+
+        if (path.startsWith("/users/activity/private/")){
+            UUID targetUUID = UUID.fromString(path.split("/users/activity/private/")[1]);
+            SessionPersonalSubPayload personalSubPayload = new SessionPersonalSubPayload(false, targetUUID);
+            subscription = new Subscription(sessionId, personalSubPayload);
+        }
+
+        if (path.startsWith("/users/activity/public/")){
+            UUID targetUUID = UUID.fromString(path.split("/users/activity/public/")[1]);
+            SessionPersonalSubPayload personalSubPayload = new SessionPersonalSubPayload(true, targetUUID);
+            subscription = new Subscription(sessionId, personalSubPayload);
+        }
+
+
+
+        injectSub(subscription, sessionId);
+    }
+
+    public void unregisterSecuredSession(String sessionId){
+        SessionSecuredEnvelope removed = sessionStore.remove(sessionId);
+        if (removed == null) return;
+        UUID userUUID = removed.getContext().getUuid();
+        List<Subscription> assosiatedSubs = new ArrayList<>();
+        userToSubAssosiation.compute(userUUID, (uuid, subs)->{
+            if (subs==null) return null;
+            subs.removeIf(sub->{
+
+                boolean isRelated = sub.getSessionId().equals(sessionId);
+                if (isRelated ){
+                    assosiatedSubs.add(sub);
+                }
+                return isRelated;
+
+            });
+
+            if (subs.isEmpty()){subs = null;}
+            return subs;
         });
 
+        assosiatedSubs.forEach(subscription -> {
+            if (subscription.getSessionPayload() instanceof SessionProjectPayload sessionProjectPayload){
+                projectToSubAssosiation.computeIfPresent(sessionProjectPayload.getProjectId(), (projectUUID, subs)->{
+                    subs.removeIf(sub->sub.getSessionId().equals(sessionId));
+                    if (subs.isEmpty()){
+                        subs = null;
+                    }
+                    return subs;
+                });
 
-
-
+                ProjectObserverEvent projectObserverEvent = new ProjectObserverEvent();
+                projectObserverEvent.setType(ObserverEventType.PROJECT_UNSUB.getValue());
+                ProjectEventContext context = new ProjectEventContext();
+                context.setUsername(subscription.getUsername());
+                context.setUserUUID(subscription.getUserUUID());
+                context.setProjectId(sessionProjectPayload.getProjectId());
+                projectObserverEvent.setContext(context);
+                publisher.publishEvent(projectObserverEvent);
+            }
+        });
 
     }
 
-    public Set<UsernameUUIDPair> getProjectSubscriptions(UUID projectUUID){
-        ConcurrentMap<String, SessionInfo> sessions = projectSessions.get(projectUUID);
-        Set<UsernameUUIDPair> answer = new HashSet<>();
-        if (sessions==null) return answer;
 
-        sessions.forEach((sessionId, info)->{
-            UsernameUUIDPair pair = new UsernameUUIDPair(info.getSecurityContext().getUsername(), info.getSecurityContext().getUuid());
-            System.out.println("pair detected "+pair);
-            answer.add(pair);
-        });
+    public Set<UsernameUUIDPair> getAllProjectSubscriptions(UUID projectUUID){
+
+        Set<UsernameUUIDPair> answer = new HashSet<>();
+        List<Subscription> subs = projectToSubAssosiation.get(projectUUID);
+        if (subs!=null){
+            subs.forEach(subscription -> {
+                answer.add(new UsernameUUIDPair(subscription.getUsername(), subscription.getUserUUID()));
+            });
+        }
 
         return answer;
     }
 
 
-    @Scheduled(fixedDelay = 15, timeUnit = TimeUnit.SECONDS)
+
+
+
+
+
+
+    @Scheduled(fixedDelay = 5, timeUnit = TimeUnit.SECONDS)
     public void testStats(){
 
-        /*
-        System.out.println("Количество активных сессий: "+allSessions.size());
-        System.out.println("Количество активных проектов: "+projectSessions.size());
-
-        projectSessions.forEach((k,v)->{
-            System.out.println("В проекте "+k);
-            v.forEach((sessionId, sessionInfo )->{
-                System.out.println("Обнаружена подписка со стороны "+sessionInfo.getSecurityContext().getUsername());
-            });
-        });
 
 
-
-
-        System.out.println(getProjectSubscriptions(UUID.fromString("a29722f5-1341-45f8-bf05-991fa0dcd12c")));
-
-         */
+        System.out.println("Количество активных сессий: "+sessionStore.size());
+        System.out.println("Количество активных проектов: "+projectToSubAssosiation.size());
+        System.out.println("Количество активных юзеров: "+userToSubAssosiation.size());
     }
 
 

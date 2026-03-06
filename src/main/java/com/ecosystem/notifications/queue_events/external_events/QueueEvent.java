@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public abstract class QueueEvent {
     private String type;
+
 }
