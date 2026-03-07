@@ -78,7 +78,7 @@ public class BrokerConfigurer implements WebSocketMessageBrokerConfigurer {
 
 
                         observationService.unregisterSecuredSession(session.getId());
-                        System.out.println("connection closed");
+                        System.out.println("connection closed !");
                         super.afterConnectionClosed(session, closeStatus);
                     }
 

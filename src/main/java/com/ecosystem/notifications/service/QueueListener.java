@@ -22,6 +22,9 @@ public class QueueListener {
     @Autowired
     private SimpMessagingTemplate notifier;
 
+    @Autowired
+    private ObservationService observer;
+
 
 
 
@@ -75,7 +78,13 @@ public class QueueListener {
             // автор отделен от participant, но его контент также могут смотреть сторонние наблюдатели, если он открыт
             notifier.convertAndSend("/users/activity/"+(context.isOpened()?"public/":"private/")+context.getProjectAuthor(), payload);
 
-            System.out.println("alarm! "+event.getContext().getAlarmStrategy());
+            // alarm strategy
+            AlarmStrategy alarmStrategy = context.getAlarmStrategy();
+            if (alarmStrategy!=null){
+                if (alarmStrategy.getAction()==AlarmAction.SESSION_CLOSE){
+                    observer.closeProjectSessionsRelatedToUsers(context.getProjectId(), alarmStrategy.getAlarmList());
+                }
+            }
         }
         catch (Exception e){
             e.printStackTrace();
@@ -109,6 +118,7 @@ public class QueueListener {
                 notifier.convertAndSend("/users/activity/public/"+context.getProjectAuthor(), payload);
 
             }
+
         }
         catch (Exception e){
             e.printStackTrace();

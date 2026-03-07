@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +28,35 @@ public class ObservationService {
     private final ConcurrentHashMap<String, SessionSecuredEnvelope> sessionStore = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, List<Subscription>> userToSubAssosiation = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, List<Subscription>> projectToSubAssosiation = new ConcurrentHashMap<>();
+
+
+
+    public void closeProjectSessionsRelatedToUsers(UUID project, List<UUID> users){
+        List<String> foundSessions = new ArrayList<>();
+        List<Subscription> subscriptions = projectToSubAssosiation.get(project);
+        System.out.println("current subscriptions");
+        // подписок нет - выходим
+        if (subscriptions == null) return;
+        subscriptions.forEach(subscription -> {
+            if (users.contains(subscription.getUserUUID())){
+                foundSessions.add(subscription.getSessionId());
+            }
+        });
+
+        System.out.println(foundSessions+" found sessions");
+
+        foundSessions.forEach(foundSession->{
+            SessionSecuredEnvelope sessionSecuredEnvelope = sessionStore.get(foundSession);
+            if (sessionSecuredEnvelope!=null){
+                try {
+                    sessionSecuredEnvelope.getSession().close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+    }
 
     // связываем сессию и security context
     public void registerSecuredSession(WebSocketSession session, SecurityContext context){
@@ -74,6 +104,7 @@ public class ObservationService {
                 return subs;
             });
 
+            // уведомляем
             ProjectObserverEvent projectObserverEvent = new ProjectObserverEvent();
             projectObserverEvent.setType(ObserverEventType.PROJECT_SUB.getValue());
             ProjectEventContext context = new ProjectEventContext();
@@ -144,6 +175,7 @@ public class ObservationService {
                     return subs;
                 });
 
+                // уведомляем
                 ProjectObserverEvent projectObserverEvent = new ProjectObserverEvent();
                 projectObserverEvent.setType(ObserverEventType.PROJECT_UNSUB.getValue());
                 ProjectEventContext context = new ProjectEventContext();
@@ -182,10 +214,12 @@ public class ObservationService {
     public void testStats(){
 
 
-
+        /*
         System.out.println("Количество активных сессий: "+sessionStore.size());
         System.out.println("Количество активных проектов: "+projectToSubAssosiation.size());
         System.out.println("Количество активных юзеров: "+userToSubAssosiation.size());
+
+         */
     }
 
 
