@@ -18,4 +18,8 @@ public abstract class EventContext {
     private Instant timestamp;
 
     private AlarmStrategy alarmStrategy;
+
+    private NotificationStrategy notificationStrategy;
+
+
 }

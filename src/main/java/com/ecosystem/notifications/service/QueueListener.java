@@ -27,7 +27,26 @@ public class QueueListener {
 
 
 
+    private void processPersonalNotificationsStrategy(NotificationStrategy notificationStrategy, String payload){
+        if (notificationStrategy==null) return;
+        if (notificationStrategy.getPublicChannel()!=null){
+            notificationStrategy.getPublicChannel().forEach(publicMember->{
+                notifier.convertAndSend("/users/activity/public/"+publicMember, payload);
 
+            });
+        }
+
+        if (notificationStrategy.getPrivateChannel()!=null){
+            notificationStrategy.getPrivateChannel().forEach(privateMember->{
+                notifier.convertAndSend("/users/activity/private/"+privateMember, payload);
+
+            });
+        }
+
+
+
+
+    }
 
 
     @RabbitListener(queues = {"${users.activity_events.queue.name}"})
@@ -39,10 +58,7 @@ public class QueueListener {
             UserEvent event = objectMapper.readValue(payload, UserEvent.class);
             notifier.convertAndSend("/users/activity/private/"+event.getContext().getUserUUID(), payload);
 
-            // дублируем в публичный канал
-            if (event.getContext().isOpened()){
-                notifier.convertAndSend("/users/activity/public/"+event.getContext().getUserUUID(), payload);
-            }
+            processPersonalNotificationsStrategy(event.getContext().getNotificationStrategy(), payload);
         }
         catch (Exception e){
             e.printStackTrace();
@@ -70,14 +86,9 @@ public class QueueListener {
             // рассылка для канала
             notifier.convertAndSend("/projects/"+context.getProjectId(), payload);
 
-            // если проект открытый - рассылка в публичный канал, чтобы это видели в том числе все сторонние наблюдатели
-            context.getParticipants().forEach(participant->{
-                notifier.convertAndSend("/users/activity/"+(context.isOpened()?"public/":"private/")+participant, payload);
-            });
+            processPersonalNotificationsStrategy(context.getNotificationStrategy(), payload);
 
-            // автор отделен от participant, но его контент также могут смотреть сторонние наблюдатели, если он открыт
-            notifier.convertAndSend("/users/activity/"+(context.isOpened()?"public/":"private/")+context.getProjectAuthor(), payload);
-
+            /*
             // alarm strategy
             AlarmStrategy alarmStrategy = context.getAlarmStrategy();
             if (alarmStrategy!=null){
@@ -85,6 +96,8 @@ public class QueueListener {
                     observer.closeProjectSessionsRelatedToUsers(context.getProjectId(), alarmStrategy.getAlarmList());
                 }
             }
+
+             */
         }
         catch (Exception e){
             e.printStackTrace();
@@ -109,15 +122,7 @@ public class QueueListener {
             // при необходимости персональной рассылки - только приватный канал.
             notifier.convertAndSend("/projects/"+context.getProjectId(), payload);
 
-            context.getParticipants().forEach(participant->{
-                notifier.convertAndSend("/users/activity/private/"+participant, payload);
-            });
-
-            // в данном случае событие публикуется в том числе для подписчиков публичного канала автора проекта
-            if (context.isOpened()){
-                notifier.convertAndSend("/users/activity/public/"+context.getProjectAuthor(), payload);
-
-            }
+            processPersonalNotificationsStrategy(context.getNotificationStrategy(), payload);
 
         }
         catch (Exception e){

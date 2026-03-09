@@ -24,14 +24,5 @@ public class ProjectSystemEventContext extends EventContext {
     // correlation id процесса - каждый процесс в системе должен иметь свой correlation id
     //private UUID correlationId;
 
-    // участники проекта - опционально для случаев, где требуется персональная рассылка участникам проекта в приватный канал
-    // если список не пуст - значит рассылка нужна
-    private List<UUID> participants;
 
-    // добавляем это поле для более умного routing'а
-    private UUID projectAuthor;
-
-    // если opened, то ивент пересылается в том числе подписчикам user public канала (пример - добавление/удаление участника в открытый проект)
-    // для этого имеем поле автор
-    private boolean opened;
 }

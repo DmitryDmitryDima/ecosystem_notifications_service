@@ -11,11 +11,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @Data
 public class UserEventContext extends EventContext {
-    //private  Instant timestamp;
+
     private  String username;
     private  UUID userUUID;
-    //private UUID correlationId;
 
-    // данное поле говорит - нужно ли дублирование ивента в публичный канал (пример - удаление проекта видно тому, кто смотрит на чужие проекты)
-    private boolean opened;
+
+
 }
