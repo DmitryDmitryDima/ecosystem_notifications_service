@@ -56,9 +56,10 @@ public class QueueListener {
         try {
             System.out.println(payload);
             UserEvent event = objectMapper.readValue(payload, UserEvent.class);
-            notifier.convertAndSend("/users/activity/private/"+event.getContext().getUserUUID(), payload);
+            String filteredPayload = objectMapper.writeValueAsString(event);
+            notifier.convertAndSend("/users/activity/private/"+event.getContext().getUserUUID(), filteredPayload);
 
-            processPersonalNotificationsStrategy(event.getContext().getNotificationStrategy(), payload);
+            processPersonalNotificationsStrategy(event.getContext().getNotificationStrategy(),filteredPayload);
         }
         catch (Exception e){
             e.printStackTrace();
@@ -81,12 +82,13 @@ public class QueueListener {
             System.out.println(payload);
 
             ProjectEvent event = objectMapper.readValue(payload,  ProjectEvent.class);
+            String filteredPayload = objectMapper.writeValueAsString(event);
             System.out.println(event.getType());
             ProjectEventContext context = event.getContext();
             // рассылка для канала
-            notifier.convertAndSend("/projects/"+context.getProjectId(), payload);
+            notifier.convertAndSend("/projects/"+context.getProjectId(), filteredPayload);
 
-            processPersonalNotificationsStrategy(context.getNotificationStrategy(), payload);
+            processPersonalNotificationsStrategy(context.getNotificationStrategy(), filteredPayload);
 
             /*
             // alarm strategy
@@ -118,11 +120,12 @@ public class QueueListener {
         try {
             System.out.println(payload);
             ProjectSystemEvent event = objectMapper.readValue(payload,  ProjectSystemEvent.class);
+            String filteredPayload = objectMapper.writeValueAsString(event);
             ProjectSystemEventContext context = event.getContext();
             // при необходимости персональной рассылки - только приватный канал.
-            notifier.convertAndSend("/projects/"+context.getProjectId(), payload);
+            notifier.convertAndSend("/projects/"+context.getProjectId(), filteredPayload);
 
-            processPersonalNotificationsStrategy(context.getNotificationStrategy(), payload);
+            processPersonalNotificationsStrategy(context.getNotificationStrategy(), filteredPayload);
 
         }
         catch (Exception e){

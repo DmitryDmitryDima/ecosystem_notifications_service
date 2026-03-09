@@ -1,5 +1,6 @@
 package com.ecosystem.notifications.queue_events.external_events;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,8 +18,10 @@ public abstract class EventContext {
 
     private Instant timestamp;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private AlarmStrategy alarmStrategy;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private NotificationStrategy notificationStrategy;
 
 
