@@ -18,7 +18,12 @@ public class WebSocketEventListener {
 
     @EventListener
     private void handleSessionSub(SessionSubscribeEvent event) {
+
+
+
         System.out.println("Subscribe");
+
+
 
 
 
@@ -31,6 +36,8 @@ public class WebSocketEventListener {
 
 
         String path = SimpMessageHeaderAccessor.getDestination(headers);
+
+
 
         System.out.println(path);
 

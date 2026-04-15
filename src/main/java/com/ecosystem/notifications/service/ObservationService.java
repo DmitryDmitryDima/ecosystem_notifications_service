@@ -26,14 +26,14 @@ public class ObservationService {
     private ApplicationEventPublisher publisher;
 
     private final ConcurrentHashMap<String, SessionSecuredEnvelope> sessionStore = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<UUID, List<Subscription>> userToSubAssosiation = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<UUID, List<Subscription>> projectToSubAssosiation = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, List<Subscription>> userToSubAssociation = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, List<Subscription>> projectToSubAssociation = new ConcurrentHashMap<>();
 
 
 
     public void closeProjectSessionsRelatedToUsers(UUID project, List<UUID> users){
         List<String> foundSessions = new ArrayList<>();
-        List<Subscription> subscriptions = projectToSubAssosiation.get(project);
+        List<Subscription> subscriptions = projectToSubAssociation.get(project);
         System.out.println("current subscriptions");
         // подписок нет - выходим
         if (subscriptions == null) return;
@@ -79,7 +79,7 @@ public class ObservationService {
             UUID userUUID = envelope.getContext().getUuid();
 
 
-            userToSubAssosiation.compute(userUUID, (uuid,subs)->{
+            userToSubAssociation.compute(userUUID, (uuid, subs)->{
                 if (subs==null){
                     subs = new ArrayList<>();
                 }
@@ -96,7 +96,7 @@ public class ObservationService {
         if (touchedEnvelope.get()==null) return;
 
         if (subsription.getSessionPayload() instanceof SessionProjectPayload sessionProjectPayload){
-            projectToSubAssosiation.compute(sessionProjectPayload.getProjectId(), (projectId, subs)->{
+            projectToSubAssociation.compute(sessionProjectPayload.getProjectId(), (projectId, subs)->{
                 if (subs == null){
                     subs = new ArrayList<>();
                 }
@@ -149,7 +149,7 @@ public class ObservationService {
         if (removed == null) return;
         UUID userUUID = removed.getContext().getUuid();
         List<Subscription> assosiatedSubs = new ArrayList<>();
-        userToSubAssosiation.compute(userUUID, (uuid, subs)->{
+        userToSubAssociation.compute(userUUID, (uuid, subs)->{
             if (subs==null) return null;
             subs.removeIf(sub->{
 
@@ -167,7 +167,7 @@ public class ObservationService {
 
         assosiatedSubs.forEach(subscription -> {
             if (subscription.getSessionPayload() instanceof SessionProjectPayload sessionProjectPayload){
-                projectToSubAssosiation.computeIfPresent(sessionProjectPayload.getProjectId(), (projectUUID, subs)->{
+                projectToSubAssociation.computeIfPresent(sessionProjectPayload.getProjectId(), (projectUUID, subs)->{
                     subs.removeIf(sub->sub.getSessionId().equals(sessionId));
                     if (subs.isEmpty()){
                         subs = null;
@@ -193,7 +193,7 @@ public class ObservationService {
     public Set<UsernameUUIDPair> getAllProjectSubscriptions(UUID projectUUID){
 
         Set<UsernameUUIDPair> answer = new HashSet<>();
-        List<Subscription> subs = projectToSubAssosiation.get(projectUUID);
+        List<Subscription> subs = projectToSubAssociation.get(projectUUID);
         if (subs!=null){
             subs.forEach(subscription -> {
                 answer.add(new UsernameUUIDPair(subscription.getUsername(), subscription.getUserUUID()));
@@ -216,8 +216,8 @@ public class ObservationService {
 
         /*
         System.out.println("Количество активных сессий: "+sessionStore.size());
-        System.out.println("Количество активных проектов: "+projectToSubAssosiation.size());
-        System.out.println("Количество активных юзеров: "+userToSubAssosiation.size());
+        System.out.println("Количество активных проектов: "+projectToSubAssociation.size());
+        System.out.println("Количество активных юзеров: "+userToSubAssociation.size());
 
          */
     }
