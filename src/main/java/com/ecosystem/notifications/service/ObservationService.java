@@ -26,6 +26,8 @@ public class ObservationService {
     private ApplicationEventPublisher publisher;
 
     private final ConcurrentHashMap<String, SessionSecuredEnvelope> sessionStore = new ConcurrentHashMap<>();
+
+    // обязательная индексация по user uuid - оптимизируем операцию удаления
     private final ConcurrentHashMap<UUID, List<Subscription>> userToSubAssociation = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, List<Subscription>> projectToSubAssociation = new ConcurrentHashMap<>();
 
